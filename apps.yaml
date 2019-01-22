@@ -1,0 +1,7 @@
+---
+- name: app1
+  type: ksonnet
+  path: apps/app1
+- name: app2
+  type: ksonnet
+  path: apps/app2

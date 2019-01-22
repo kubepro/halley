@@ -1,0 +1,96 @@
+---
+- name: empty_job_runs
+  type: fake
+  script: |
+    #!/bin/bash
+    set -ex
+    exit 0
+- name: sleep_job
+  type: push
+  filter:
+    ref: "refs/heads/master"
+    repository:
+      url: "https://github.com/account/repo"
+  timeout: 600
+  script: |
+    #!/bin/bash
+    set -ex
+    sleep 120
+    exit 0
+- name: always_success_job
+  type: push
+  filter:
+    ref: "refs/heads/master"
+    repository:
+      url: "https://github.com/account/repo"
+  timeout: 600
+  script: |
+    #!/bin/bash
+    set -ex
+    exit 0
+- name: always_fail_job
+  type: push
+  filter:
+    ref: "refs/heads/master"
+    repository:
+      url: "https://github.com/account/repo"
+  timeout: 600
+  script: |
+    #!/bin/bash
+    set -ex
+    exit 1
+- name: multiple_filters_job
+  triggers:
+    - type: pull_request
+      filter:
+        action: synchronize
+        repository:
+          html_url: "https://github.com/kozhukalov/fake_repo"
+    - type: pull_request
+      filter:
+        action: opened
+        repository:
+          html_url: "https://github.com/kozhukalov/fake_repo"
+
+  timeout: 600
+  script: |
+    #!/bin/bash
+    set -ex
+
+    STATUSES_URL=$(cat ${HALLEY_JOB_INSTANCE_EVENT_FILE} | jq -r '.payload.pull_request.statuses_url')
+    TARGET_URL=${HALLEY_URL}/raw/jobrunlog/${HALLEY_JOB_INSTANCE_UUID}
+
+    curl -X POST -K ${HALLEY_GITHUB_API_HEADERS_FILE} \
+      --data "{\"state\": \"pending\", \"description\": \"Testing in progress\", \"target_url\": \"${TARGET_URL}\", \"context\": \"halley-cicd-service\"}" \
+      ${STATUSES_URL}
+
+    sleep 60
+
+    curl -X POST -K ${HALLEY_GITHUB_API_HEADERS_FILE} \
+      --data "{\"state\": \"success\", \"description\": \"All tests have passed\", \"target_url\": \"${TARGET_URL}\", \"context\": \"halley-cicd-service\"}" \
+      ${STATUSES_URL}
+
+- name: sync_some_repo
+  triggers:
+    - type: push
+      filter:
+        ref: refs/heads/master
+        repository:
+          url: https://github.com/some/repo
+  timeout: 60
+  cwd: apps
+  script: |
+    #!/bin/bash
+    set -ex
+    if [[ ! -d repo ]]; then
+      git clone git@github.com:some/repo.git
+    fi
+
+    cd repo
+    git fetch -p origin
+    MERGE=$(git diff --exit-code --quiet master origin/master -- && echo "true" || echo "git merge --ff-only origin/master")
+    STASH1=$(git diff-index --exit-code --quiet refs/heads/master -- && echo "true" || echo "git stash")
+    STASH2=$(git diff-index --exit-code --quiet refs/heads/master -- && echo "true" || echo "git stash pop")
+    ${STASH1} && ${MERGE} && ${STASH2}
+
+
