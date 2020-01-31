@@ -1,0 +1,19 @@
+{
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "browsers": ["> 0.5%", "last 2 versions", "Android >= 4"]
+        }
+      }
+    ],
+    "react"
+  ],
+  "plugins": [
+    "transform-react-jsx",
+    "transform-class-properties",
+    "transform-object-rest-spread",
+    "transform-async-to-generator"
+  ]
+}

@@ -1,2 +1,5 @@
 .idea
 commands.txt
+node_modules
+build
+static

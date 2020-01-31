@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.git
+Dockerfile
+static/assets
+.idea
+workspace
+commands.txt
+aux
+build
+jobs.yaml
+apps.yaml
